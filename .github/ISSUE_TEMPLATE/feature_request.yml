@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a practical improvement for this package.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What real workflow would this improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Keep Google auth, live Workspace access, and host-specific support boundaries explicit.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification idea
+      description: How could this be tested without requiring secrets or live Google data by default?

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/luis63e/google-workspace-agent-pack/security/advisories/new
+    about: Please report exploitable issues privately; never paste secrets or tokens.

@@ -1,0 +1,34 @@
+name: Bug report
+description: Report a reproducible package or documentation problem.
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include commands with secrets redacted. Do not paste OAuth client JSON, tokens, or private Workspace content.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      placeholder: "node --version"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Redact paths, emails, IDs, and credentials where needed.
+      render: shell
