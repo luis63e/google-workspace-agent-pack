@@ -1,0 +1,59 @@
+{
+  "name": "google-workspace-agent-pack",
+  "version": "0.1.0",
+  "description": "Private Google Workspace CLI installer, OAuth workflow, diagnostics, portable skills, and optional MCP templates.",
+  "type": "module",
+  "bin": {
+    "google-workspace-pack": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "adapters",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:install": "npm run build && node scripts/verify-install.mjs",
+    "test:setup": "npm run build && node scripts/verify-setup.mjs",
+    "test:package": "npm run build && node scripts/verify-package.mjs",
+    "skills:check": "npm run build && node scripts/sync-skills.mjs --check",
+    "skills:sync": "npm run build && node scripts/sync-skills.mjs --write",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm test && npm run typecheck && npm run build && npm run skills:check && npm run test:package",
+    "prepack": "npm run build && npm run skills:check"
+  },
+  "keywords": [
+    "mcp",
+    "google-workspace",
+    "google-drive",
+    "skills",
+    "agents"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luis63e/google-workspace-agent-pack.git"
+  },
+  "homepage": "https://github.com/luis63e/google-workspace-agent-pack#readme",
+  "bugs": {
+    "url": "https://github.com/luis63e/google-workspace-agent-pack/issues"
+  },
+  "engines": {
+    "node": ">=22.12.0 <23 || >=24.0.0 <25 || >=26.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
+}

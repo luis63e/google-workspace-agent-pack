@@ -1,0 +1,30 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Local Pi/runtime state
+.atl/
+.mcp.json
+agent-config/
+
+# Local environment/secrets
+.env
+.env.*
+client_secret*.json
+credentials.json
+credentials.enc
+.encryption_key
+token_cache.json
+*.pem
+*.key
+*.p12
+
+# Package/test scratch
+*.tgz
+.npm/
+
+# OS/editor noise
+.DS_Store
+*.log

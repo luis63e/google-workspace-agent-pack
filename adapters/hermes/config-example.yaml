@@ -1,0 +1,47 @@
+# Native Hermes MCP example for Google Workspace hosted MCP endpoints.
+# Copy/merge intentionally; prefer:
+# google-workspace-pack mcp setup --agent hermes --target <active-hermes-home> --services drive,docs,sheets
+# Secrets stay in environment variables. Do not paste actual client secrets here.
+mcp_servers:
+  google-workspace-drive:
+    url: https://drivemcp.googleapis.com/mcp/v1
+    auth: oauth
+    oauth:
+      client_id: ${GOOGLE_MCP_CLIENT_ID}
+      client_secret: ${GOOGLE_MCP_CLIENT_SECRET}
+      scope: https://www.googleapis.com/auth/drive.readonly
+      redirect_port: 12798
+      redirect_host: localhost
+    tools:
+      prompts: false
+      resources: false
+    sampling:
+      enabled: false
+  google-workspace-docs:
+    url: https://docsmcp.googleapis.com/mcp/v1
+    auth: oauth
+    oauth:
+      client_id: ${GOOGLE_MCP_CLIENT_ID}
+      client_secret: ${GOOGLE_MCP_CLIENT_SECRET}
+      scope: https://www.googleapis.com/auth/documents.readonly
+      redirect_port: 12798
+      redirect_host: localhost
+    tools:
+      prompts: false
+      resources: false
+    sampling:
+      enabled: false
+  google-workspace-sheets:
+    url: https://sheetsmcp.googleapis.com/mcp/v1
+    auth: oauth
+    oauth:
+      client_id: ${GOOGLE_MCP_CLIENT_ID}
+      client_secret: ${GOOGLE_MCP_CLIENT_SECRET}
+      scope: https://www.googleapis.com/auth/spreadsheets.readonly
+      redirect_port: 12798
+      redirect_host: localhost
+    tools:
+      prompts: false
+      resources: false
+    sampling:
+      enabled: false

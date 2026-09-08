@@ -1,0 +1,12 @@
+{
+  "name": "google-workspace-agent-pack",
+  "description": "Optional generic MCP adapter example; not live-verified or a guaranteed native plugin schema.",
+  "mcpConfig": "../../.mcp.json",
+  "skillsPath": "../../skills",
+  "recommendedSkills": [
+    "google-drive",
+    "google-sheets",
+    "google-docs",
+    "google-workspace-safety"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "google-workspace-agent-pack",
+  "description": "Documentation-only Hermes adapter example; use native config.yaml setup/login commands instead of treating this as an installable plugin schema.",
+  "nativeConfigExample": "./config-example.yaml",
+  "skills": [
+    "../../skills/google-drive/SKILL.md",
+    "../../skills/google-sheets/SKILL.md",
+    "../../skills/google-docs/SKILL.md",
+    "../../skills/google-workspace-safety/SKILL.md"
+  ]
+}
