@@ -22,6 +22,7 @@ interface Args {
   clientSecret?: string;
   docId?: string;
   sheetId?: string;
+  presentationId?: string;
   force: boolean;
   dryRun: boolean;
   help: boolean;
@@ -37,11 +38,11 @@ const allowed: Record<string, string[]> = {
   install: ['--state', '--json'],
   auth: ['--state', '--services', '--access', '--client-secret'],
   exec: ['--state'],
-  doctor: ['--state', '--json', '--live', '--doc-id', '--sheet-id']
+  doctor: ['--state', '--json', '--live', '--doc-id', '--sheet-id', '--presentation-id']
 };
 const valueOptions: Record<string, keyof Args> = {
   '--agent': 'agent', '--target': 'target', '--profile': 'profile', '--state': 'state', '--services': 'services',
-  '--access': 'access', '--callback-port': 'callbackPort', '--client-secret': 'clientSecret', '--doc-id': 'docId', '--sheet-id': 'sheetId'
+  '--access': 'access', '--callback-port': 'callbackPort', '--client-secret': 'clientSecret', '--doc-id': 'docId', '--sheet-id': 'sheetId', '--presentation-id': 'presentationId'
 };
 const flagOptions: Record<string, keyof Args> = { '--force': 'force', '--dry-run': 'dryRun', '--json': 'json', '--live': 'live' };
 
@@ -84,7 +85,7 @@ export function parseArgs(argv: string[]): Args {
       if (args.mcpCommand === 'login' && (seen.has('--access') || seen.has('--json') || seen.has('--callback-port'))) throw new Error('--access, --json and --callback-port are valid for mcp setup only.');
     }
     if (args.command === 'exec' && !args.passthrough.length) throw new Error('exec requires arguments after --.');
-    if ((args.docId || args.sheetId) && !args.live) throw new Error('--doc-id and --sheet-id require --live.');
+    if ((args.docId || args.sheetId || args.presentationId) && !args.live) throw new Error('--doc-id, --sheet-id and --presentation-id require --live.');
     if (args.live) liveChecks(args);
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(args.profile)) throw new Error('Profile must be 1–64 letters, digits, underscores or hyphens, starting with a letter or digit.');
   }
@@ -121,7 +122,7 @@ export async function run(argv = process.argv.slice(2)): Promise<number> {
     case 'exec': return managedExec(args.state, args.passthrough);
     case 'doctor': {
       const result = await doctor(args.state, args);
-      console.log(args.json ? JSON.stringify(result, null, 2) : `Installation: ${result.installation}\nAuthentication: ${result.authentication}\nLive: ${result.live}\nReady (Drive/Docs/Sheets metadata): ${result.ready}\n${result.next.map(step => `- ${step}`).join('\n')}`);
+      console.log(args.json ? JSON.stringify(result, null, 2) : `Installation: ${result.installation}\nAuthentication: ${result.authentication}\nLive: ${result.live}\nReady (Drive/Docs/Sheets metadata; requested Slides probe must also pass): ${result.ready}\n${result.next.map(step => `- ${step}`).join('\n')}`);
       return result.installation === 'verified' && (!args.live || result.live === 'verified-for-requested-probes') ? 0 : 1;
     }
     case 'init': {
@@ -140,12 +141,12 @@ function helpText(): string {
 
 Usage:
   google-workspace-pack setup --agent hermes|codex|claude --target <root> [--state <dir>] [--dry-run] [--json]
-  google-workspace-pack mcp setup --agent hermes --target <active-hermes-home> --services drive,docs,sheets [--profile google-workspace] [--access read|write] [--callback-port 12798] [--dry-run] [--json]
-  google-workspace-pack mcp login --agent hermes --target <active-hermes-home> --services drive,docs,sheets [--profile google-workspace] [--dry-run]
+  google-workspace-pack mcp setup --agent hermes --target <active-hermes-home> --services drive,docs,sheets[,slides] [--profile google-workspace] [--access read|write] [--callback-port 12798] [--dry-run] [--json]
+  google-workspace-pack mcp login --agent hermes --target <active-hermes-home> --services drive,docs,sheets[,slides] [--profile google-workspace] [--dry-run]
   google-workspace-pack install [--state <private-dir>] [--json]
   google-workspace-pack auth --services <csv> [--access read|write] [--client-secret <file>] [--state <dir>]
   google-workspace-pack exec [--state <dir>] -- <gws arguments...>
-  google-workspace-pack doctor [--state <dir>] [--json] [--live [--doc-id <id>] [--sheet-id <id>]]
+  google-workspace-pack doctor [--state <dir>] [--json] [--live [--doc-id <id>] [--sheet-id <id>] [--presentation-id <id>]]
   google-workspace-pack init [--target <dir>] [--profile <name>] [--force] [--dry-run]
 
 setup    Install managed gws and deploy native skills; explicit target, no overwrites.
@@ -154,10 +155,10 @@ mcp      Configure/login native Hermes remote Google MCP servers. OAuth remains 
          setup writes \${GOOGLE_MCP_CLIENT_ID}/\${GOOGLE_MCP_CLIENT_SECRET} refs only.
 install  Download pinned gws 0.22.5, verify SHA-256, stage and activate privately.
 auth     Human OAuth consent; read by default, write explicitly opted in.
-         Services: drive,docs,sheets,gmail,calendar,people. Desktop client required.
+         Services: drive,docs,sheets,slides,gmail,calendar,people. Desktop client required.
 exec     Run managed gws with isolated credentials/config and exact argument forwarding.
          Use absolute paths for local files (working directory is isolated).
-doctor   Offline read-only local checks. --live explicitly permits metadata-only Google probes.
+doctor   Offline read-only local checks. --live explicitly permits metadata-only Google probes; Slides needs --presentation-id.
 init     Optional hosted MCP config/skills examples; NOT live-verified or an MCP server install.
          Existing files skipped; --force merges MCP servers and preserves unrelated entries.
 

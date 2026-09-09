@@ -99,12 +99,16 @@ describe('explicit authentication and live diagnostics', () => {
     expect(classifyFailure(1, '404 not found secret')).toBe('not-found-or-permission');
     expect(classifyFailure(5, 'secret')).toBe('unverified');
   });
-  it('uses metadata-only probes and requires safe IDs for Docs and Sheets', () => {
+  it('uses metadata-only probes and requires safe IDs for Docs, Sheets, and Slides', () => {
     expect(liveChecks({})).toEqual([{ service: 'drive', args: ['drive', 'about', 'get', '--params', '{"fields":"kind"}'] }]);
-    const probes = liveChecks({ docId: 'doc_123', sheetId: 'sheet-456' });
+    const probes = liveChecks({ docId: 'doc_123', sheetId: 'sheet-456', presentationId: 'deck_789' });
     expect(JSON.stringify(probes)).toContain('documentId');
-    expect(JSON.stringify(probes)).not.toMatch(/body|values|includeGridData/);
+    expect(JSON.stringify(probes)).toContain('spreadsheetId');
+    expect(JSON.stringify(probes)).toContain('presentationId');
+    expect(probes.find(probe => probe.service === 'slides')?.args).toEqual(['slides', 'presentations', 'get', '--params', '{"presentationId":"deck_789","fields":"presentationId"}']);
+    expect(JSON.stringify(probes)).not.toMatch(/body|values|includeGridData|thumbnail/);
     expect(() => liveChecks({ docId: '../secret' })).toThrow(/ID/);
+    expect(() => liveChecks({ presentationId: 'https://example.invalid/deck' })).toThrow(/ID/);
   });
   it('live doctor with no credentials remains missing and never probes Google', async () => {
     const root = await temporary();
@@ -152,6 +156,8 @@ describe('managed security boundaries', () => {
     expect(() => authArgs('all', 'read')).toThrow(/service/);
     expect(() => authArgs('drive', 'full')).toThrow(/access/);
     expect(authArgs('drive,docs', 'read')).toEqual(['auth', 'login', '--scopes', 'https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/documents.readonly']);
+    expect(authArgs('slides', 'read')).toEqual(['auth', 'login', '--scopes', 'https://www.googleapis.com/auth/presentations.readonly']);
+    expect(authArgs('slides', 'write')).toEqual(['auth', 'login', '--scopes', 'https://www.googleapis.com/auth/presentations']);
     expect(authArgs('drive', 'write')).toEqual(['auth', 'login', '--scopes', 'https://www.googleapis.com/auth/drive.file']);
   });
   it('rejects unsupported platforms before writing state', () => {

@@ -5,7 +5,7 @@ import { dirname, join, parse, resolve, sep } from 'node:path';
 import { spawn } from 'node:child_process';
 import { Document, isAlias, isMap, isScalar, parseAllDocuments, parseDocument, Scalar, visit, YAMLMap } from 'yaml';
 
-export type GoogleMcpService = 'drive' | 'docs' | 'sheets';
+export type GoogleMcpService = 'drive' | 'docs' | 'sheets' | 'slides';
 export type GoogleMcpAccess = 'read' | 'write';
 export interface HermesMcpSetupOptions { agent: string; target: string; services: GoogleMcpService[]; profile?: string; access?: GoogleMcpAccess; callbackPort?: number; dryRun?: boolean; readHook?: () => Promise<void> | void }
 export interface HermesMcpLoginOptions { agent: string; target: string; services: GoogleMcpService[]; profile?: string; dryRun?: boolean; env?: NodeJS.ProcessEnv; isTTY?: boolean; runner?: ProcessRunner }
@@ -21,15 +21,16 @@ const SERVER_KEYS = new Set(['url', 'auth', 'oauth', 'tools', 'sampling']);
 const SERVICES: Record<GoogleMcpService, { url: string; read: string; write: string; apis: string[] }> = {
   drive: { url: 'https://drivemcp.googleapis.com/mcp/v1', read: 'https://www.googleapis.com/auth/drive.readonly', write: 'https://www.googleapis.com/auth/drive.file', apis: ['drive.googleapis.com', 'drivemcp.googleapis.com'] },
   docs: { url: 'https://docsmcp.googleapis.com/mcp/v1', read: 'https://www.googleapis.com/auth/documents.readonly', write: 'https://www.googleapis.com/auth/documents', apis: ['docs.googleapis.com', 'docsmcp.googleapis.com'] },
-  sheets: { url: 'https://sheetsmcp.googleapis.com/mcp/v1', read: 'https://www.googleapis.com/auth/spreadsheets.readonly', write: 'https://www.googleapis.com/auth/spreadsheets', apis: ['sheets.googleapis.com', 'sheetsmcp.googleapis.com'] }
+  sheets: { url: 'https://sheetsmcp.googleapis.com/mcp/v1', read: 'https://www.googleapis.com/auth/spreadsheets.readonly', write: 'https://www.googleapis.com/auth/spreadsheets', apis: ['sheets.googleapis.com', 'sheetsmcp.googleapis.com'] },
+  slides: { url: 'https://slidesmcp.googleapis.com/mcp/v1', read: 'https://www.googleapis.com/auth/presentations.readonly', write: 'https://www.googleapis.com/auth/presentations', apis: ['slides.googleapis.com', 'slidesmcp.googleapis.com'] }
 };
 
 export function parseHermesServices(csv: string): GoogleMcpService[] {
   const parts = csv.split(',').map(s => s.trim()).filter(Boolean);
-  if (!parts.length) throw new Error('mcp setup/login requires --services drive,docs,sheets selection.');
+  if (!parts.length) throw new Error('mcp setup/login requires --services drive,docs,sheets,slides selection.');
   const seen = new Set<string>();
   for (const part of parts) {
-    if (!Object.hasOwn(SERVICES, part)) throw new Error('Unsupported MCP services. Supported services: drive,docs,sheets.');
+    if (!Object.hasOwn(SERVICES, part)) throw new Error('Unsupported MCP services. Supported services: drive,docs,sheets,slides.');
     if (seen.has(part)) throw new Error(`Duplicate MCP service: ${part}`);
     seen.add(part);
   }
@@ -39,8 +40,8 @@ export function parseHermesServices(csv: string): GoogleMcpService[] {
 export function validateHermesMcpOptions(options: Pick<HermesMcpSetupOptions, 'agent' | 'target' | 'services' | 'profile' | 'access' | 'callbackPort'>) {
   if (options.agent !== 'hermes') throw new Error('MCP setup/login currently supports --agent hermes only.');
   if (!options.target) throw new Error('MCP setup/login requires explicit --target <active-hermes-home>.');
-  if (!Array.isArray(options.services) || options.services.length === 0) throw new Error('MCP setup/login requires --services drive,docs,sheets selection.');
-  for (const service of options.services) if (!Object.hasOwn(SERVICES, service)) throw new Error('Unsupported MCP services. Supported services: drive,docs,sheets.');
+  if (!Array.isArray(options.services) || options.services.length === 0) throw new Error('MCP setup/login requires --services drive,docs,sheets,slides selection.');
+  for (const service of options.services) if (!Object.hasOwn(SERVICES, service)) throw new Error('Unsupported MCP services. Supported services: drive,docs,sheets,slides.');
   const profile = options.profile ?? DEFAULT_PROFILE;
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(profile)) throw new Error('Profile must be 1–64 letters, digits, underscores or hyphens, starting with a letter or digit.');
   const accessMode = options.access ?? 'read';

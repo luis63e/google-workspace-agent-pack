@@ -13,7 +13,7 @@ it('forwards exact exec argument arrays without interpreting child flags', () =>
   expect(args.passthrough).toEqual(['drive', 'files', 'list', '--params', '{"q":"name = \'a; $(touch x)\'"}']);
 });
 it('parses native Hermes MCP setup/login strictly without switching to managed auth', () => {
-  const setup = parseArgs(['mcp', 'setup', '--agent', 'hermes', '--target', '/tmp/hermes', '--services', 'drive,docs', '--access', 'write', '--callback-port', '12800']);
+  const setup = parseArgs(['mcp', 'setup', '--agent', 'hermes', '--target', '/tmp/hermes', '--services', 'drive,slides', '--access', 'write', '--callback-port', '12800']);
   expect(setup.command).toBe('mcp');
   expect(setup.mcpCommand).toBe('setup');
   expect(setup.profile).toBe('google-workspace');
@@ -21,7 +21,7 @@ it('parses native Hermes MCP setup/login strictly without switching to managed a
   expect(setup.callbackPort).toBe(12800);
   expect(parseArgs(['mcp', 'login', '--agent', 'hermes', '--target', '/tmp/hermes', '--services', 'drive']).mcpCommand).toBe('login');
   expect(() => parseArgs(['mcp', 'login', '--agent', 'hermes', '--target', '/tmp/hermes', '--services', 'drive', '--access', 'read'])).toThrow(/setup only/);
-  expect(() => parseArgs(['mcp', 'setup', '--agent', 'hermes', '--target', '/tmp/hermes', '--services', 'gmail'])).toThrow(/drive,docs,sheets/);
+  expect(() => parseArgs(['mcp', 'setup', '--agent', 'hermes', '--target', '/tmp/hermes', '--services', 'gmail'])).toThrow(/drive,docs,sheets,slides/);
 });
 
 it('rejects irrelevant flags, missing values and credentials without echoing values', () => {
@@ -29,5 +29,7 @@ it('rejects irrelevant flags, missing values and credentials without echoing val
   expect(() => parseArgs(['auth', '--services'])).toThrow(/requires/);
   expect(() => parseArgs(['exec', '--version'])).toThrow(/--/);
   expect(() => parseArgs(['doctor', '--doc-id', 'doc'])).toThrow(/--live/);
+  expect(() => parseArgs(['doctor', '--presentation-id', 'deck'])).toThrow(/--live/);
+  expect(parseArgs(['doctor', '--live', '--presentation-id', 'deck_123']).presentationId).toBe('deck_123');
   expect(() => parseArgs(['auth', '--token=SECRET'])).toThrow('Unknown option; use --help.');
 });

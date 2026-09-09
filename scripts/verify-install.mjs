@@ -73,7 +73,7 @@ try {
   for (const path of jsonPaths) {
     const data = JSON.parse(await readFile(join(target, path), 'utf8'));
     assert.ok(data && typeof data === 'object');
-    if (data.mcpServers) assert.equal(Object.keys(data.mcpServers).length, 3);
+    if (data.mcpServers) assert.equal(Object.keys(data.mcpServers).length, 4);
     assert.doesNotMatch(JSON.stringify(data), /client_secret|refresh_token|TEST_ONLY_AMBIENT_VALUE/);
   }
   const generated = JSON.parse(await readFile(join(target, '.mcp.json'), 'utf8'));

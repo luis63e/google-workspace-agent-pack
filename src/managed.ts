@@ -240,13 +240,14 @@ export async function managedAuth(input: string, options: AuthOptions, dependenc
   });
 }
 
-export interface LiveOptions { live?: boolean; docId?: string; sheetId?: string }
+export interface LiveOptions { live?: boolean; docId?: string; sheetId?: string; presentationId?: string }
 
 export function liveChecks(options: LiveOptions): { service: string; args: string[] }[] {
-  for (const id of [options.docId, options.sheetId]) if (id !== undefined && !/^[A-Za-z0-9_-]{1,256}$/.test(id)) throw new Error('Document/spreadsheet ID must contain only letters, digits, underscore or hyphen (not a URL).');
+  for (const id of [options.docId, options.sheetId, options.presentationId]) if (id !== undefined && !/^[A-Za-z0-9_-]{1,256}$/.test(id)) throw new Error('Document/spreadsheet/presentation ID must contain only letters, digits, underscore or hyphen (not a URL).');
   const checks = [{ service: 'drive', args: ['drive', 'about', 'get', '--params', JSON.stringify({ fields: 'kind' })] }];
   if (options.docId) checks.push({ service: 'docs', args: ['docs', 'documents', 'get', '--params', JSON.stringify({ documentId: options.docId, fields: 'documentId' })] });
   if (options.sheetId) checks.push({ service: 'sheets', args: ['sheets', 'spreadsheets', 'get', '--params', JSON.stringify({ spreadsheetId: options.sheetId, fields: 'spreadsheetId' })] });
+  if (options.presentationId) checks.push({ service: 'slides', args: ['slides', 'presentations', 'get', '--params', JSON.stringify({ presentationId: options.presentationId, fields: 'presentationId' })] });
   return checks;
 }
 
@@ -272,7 +273,7 @@ export async function doctor(input: string, options: LiveOptions = {}): Promise<
     report.client = await exists(join(state, 'config', 'client_secret.json')) ? 'present' : 'missing';
     if (await exists(join(state, 'config', 'credentials.enc')) || await exists(join(state, 'config', 'credentials.json'))) report.authentication = 'present-unverified';
     if (report.client === 'missing') report.next.push('Create a Desktop OAuth client in your Google Cloud project; use auth --client-secret with its downloaded JSON.');
-    if (report.authentication === 'missing') report.next.push('Run auth --services drive,docs,sheets (read access by default); a human must approve OAuth consent.');
+    if (report.authentication === 'missing') report.next.push('Run auth --services drive,docs,sheets (read access by default); add slides explicitly when needed. A human must approve OAuth consent.');
     if (options.live && report.authentication !== 'missing') {
       const probes = liveChecks(options);
       await locked(state, async () => {
@@ -288,9 +289,10 @@ export async function doctor(input: string, options: LiveOptions = {}): Promise<
       });
       report.checks.docs ??= 'unverified: supply --doc-id for an authorized document (ID only, no contents)';
       report.checks.sheets ??= 'unverified: supply --sheet-id for an authorized spreadsheet (ID only, no cells)';
+      report.checks.slides ??= 'unverified: supply --presentation-id for an authorized presentation (ID only, no slides/thumbnails)';
       report.live = probes.every(probe => report.checks[probe.service] === 'verified') ? 'verified-for-requested-probes' : 'failed';
-      report.ready = ['drive', 'docs', 'sheets'].every(service => report.checks[service] === 'verified');
-      report.next.push('Live results verify only these metadata reads, not write permissions, every API, or MCP host compatibility.');
+      report.ready = ['drive', 'docs', 'sheets'].every(service => report.checks[service] === 'verified') && (!options.presentationId || report.checks.slides === 'verified');
+      report.next.push('Live results verify only these metadata reads, not write permissions, edits, thumbnails, every API, or MCP host compatibility.');
       for (const [service, result] of Object.entries(report.checks)) {
         if (result === 'auth') report.next.push(`${service}: rerun auth with selected services and human consent.`);
         if (result === 'permission') report.next.push(`${service}: check granted OAuth scopes and sharing permissions; do not broaden access automatically.`);
@@ -299,7 +301,7 @@ export async function doctor(input: string, options: LiveOptions = {}): Promise<
         if (result === 'not-found-or-permission') report.next.push(`${service}: confirm the authorized ID and account sharing; 404 can hide permission denial.`);
       }
     } else {
-      report.next.push('API access is unverified. Use doctor --live explicitly after authentication. Docs/Sheets require authorized IDs for metadata-only checks.');
+      report.next.push('API access is unverified. Use doctor --live explicitly after authentication. Docs/Sheets/Slides require authorized IDs for metadata-only checks.');
     }
   } catch (error) {
     report.installation = 'error';
@@ -343,13 +345,14 @@ const SCOPES: Record<string, [string, string]> = {
   drive: ['drive.readonly', 'drive.file'],
   docs: ['documents.readonly', 'documents'],
   sheets: ['spreadsheets.readonly', 'spreadsheets'],
+  slides: ['presentations.readonly', 'presentations'],
   gmail: ['gmail.readonly', 'gmail.modify'],
   calendar: ['calendar.readonly', 'calendar.events'],
   people: ['contacts.readonly', 'contacts']
 };
 
 export function authArgs(services: string, access = 'read'): string[] {
-  if (!services) throw new Error('--services is required (drive,docs,sheets,gmail,calendar,people).');
+  if (!services) throw new Error('--services is required (drive,docs,sheets,slides,gmail,calendar,people).');
   if (!['read', 'write'].includes(access)) throw new Error('--access must be read or write.');
   const selected = [...new Set(services.split(','))];
   for (const service of selected) {

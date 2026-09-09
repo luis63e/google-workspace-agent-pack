@@ -9,7 +9,7 @@ Never commit or publish:
 - Managed state directories, local `agent-config/`, `dist/`, `node_modules/`, `.atl/`, or caches.
 - Real Workspace document contents used only for debugging.
 
-Use placeholders such as `/path/to/private/client.json`, `AUTHORIZED_DOCUMENT_ID`, and `AUTHORIZED_SPREADSHEET_ID`.
+Use placeholders such as `/path/to/private/client.json`, `AUTHORIZED_DOCUMENT_ID`, `AUTHORIZED_SPREADSHEET_ID`, and `AUTHORIZED_PRESENTATION_ID`.
 
 ## Managed state model
 
@@ -21,11 +21,11 @@ Encryption in upstream `gws` state does not protect against another process runn
 
 ## Diagnostics boundaries
 
-Offline `doctor` checks local installation, integrity, file layout, permissions, and presence of credential/client files. It does not validate token freshness or access to a specific Drive/Docs/Sheets resource.
+Offline `doctor` checks local installation, integrity, file layout, permissions, and presence of credential/client files. It does not validate token freshness or access to a specific Drive/Docs/Sheets/Slides resource.
 
-`doctor --live` is explicit and may refresh tokens, fetch discovery documents, update upstream caches, and call bounded metadata probes. Without `--doc-id` and `--sheet-id`, Docs and Sheets resource readiness remain unverified.
+`doctor --live` is explicit and may refresh tokens, fetch discovery documents, update upstream caches, and call bounded metadata probes. Without `--doc-id`, `--sheet-id`, and `--presentation-id`, Docs, Sheets, and Slides resource readiness remain unverified; Slides verification reads only `presentationId`, not edits or thumbnails.
 
-`ready: true` means the requested Drive + Docs + Sheets metadata probes succeeded. It does not mean write access, all Workspace APIs, or MCP host compatibility.
+`ready: true` remains backward compatible for Drive + Docs + Sheets metadata probes. If a Slides presentation probe is additionally requested, it must also pass; readiness still does not mean write access, slide edits/thumbnails, all Workspace APIs, or MCP host compatibility.
 
 ## Recovery rules
 

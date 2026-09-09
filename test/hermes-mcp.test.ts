@@ -39,6 +39,20 @@ describe('native Hermes MCP setup', () => {
 
 
 
+  it('supports explicit Slides setup with presentation scopes and APIs without broad Drive scope', async () => {
+    const target = await tempHome();
+    const result = await hermesMcpSetup({ agent: 'hermes', target, services: ['slides'], access: 'write', dryRun: true });
+    expect(result.next).toContain('slides.googleapis.com, slidesmcp.googleapis.com');
+    expect(result.next).toContain('--services slides');
+    expect(result.changes).toEqual([{ server: 'google-workspace-slides', action: 'create' }]);
+
+    await hermesMcpSetup({ agent: 'hermes', target, services: ['slides'], access: 'read' });
+    const config = await readFile(join(target, 'config.yaml'), 'utf8');
+    expect(config).toContain('https://slidesmcp.googleapis.com/mcp/v1');
+    expect(config).toContain('https://www.googleapis.com/auth/presentations.readonly');
+    expect(config).not.toContain('https://www.googleapis.com/auth/drive.file');
+  });
+
   it('emits Hermes-compatible capability and sampling schema', async () => {
     const target = await tempHome();
     await hermesMcpSetup({ agent: 'hermes', target, services: ['drive'] });
@@ -138,12 +152,13 @@ describe('native Hermes MCP setup', () => {
 describe('native Hermes MCP login', () => {
   it('validates metadata and invokes hermes login sequentially with HERMES_HOME and no shell', async () => {
     const target = await tempHome();
-    await hermesMcpSetup({ agent: 'hermes', target, services: ['drive', 'sheets'] });
+    await hermesMcpSetup({ agent: 'hermes', target, services: ['drive', 'slides', 'sheets'] });
     const runner = vi.fn(async () => ({ code: 0 }));
-    const result = await hermesMcpLogin({ agent: 'hermes', target, services: ['drive', 'sheets'], env: { GOOGLE_MCP_CLIENT_ID: 'set', GOOGLE_MCP_CLIENT_SECRET: 'set' }, isTTY: true, runner });
+    const result = await hermesMcpLogin({ agent: 'hermes', target, services: ['drive', 'slides', 'sheets'], env: { GOOGLE_MCP_CLIENT_ID: 'set', GOOGLE_MCP_CLIENT_SECRET: 'set' }, isTTY: true, runner });
     expect(result.status).toBe('completed');
     expect(runner).toHaveBeenNthCalledWith(1, 'hermes', ['mcp', 'login', 'google-workspace-drive'], expect.objectContaining({ env: expect.objectContaining({ HERMES_HOME: target }), shell: false }));
-    expect(runner).toHaveBeenNthCalledWith(2, 'hermes', ['mcp', 'login', 'google-workspace-sheets'], expect.anything());
+    expect(runner).toHaveBeenNthCalledWith(2, 'hermes', ['mcp', 'login', 'google-workspace-slides'], expect.anything());
+    expect(runner).toHaveBeenNthCalledWith(3, 'hermes', ['mcp', 'login', 'google-workspace-sheets'], expect.anything());
   });
 
 
@@ -172,6 +187,14 @@ describe('native Hermes MCP login', () => {
     await hermesMcpLogin({ agent: 'hermes', target, services: ['drive'], env: { GOOGLE_MCP_CLIENT_ID: 'set', GOOGLE_MCP_CLIENT_SECRET: 'set', HERMES_HOME: '/wrong', HERMES_PROFILE: 'other' }, isTTY: true, runner });
     expect(runner).toHaveBeenCalledWith('hermes', ['mcp', 'login', 'google-workspace-drive'], expect.objectContaining({ env: expect.objectContaining({ HERMES_HOME: target }) }));
     expect(runner.mock.calls[0][2].env.HERMES_PROFILE).toBeUndefined();
+  });
+
+  it('rejects broad Slides OAuth scopes before login', async () => {
+    const target = await tempHome();
+    const runner = vi.fn(async () => ({ code: 0 }));
+    await writeFile(join(target, 'config.yaml'), 'mcp_servers:\n  google-workspace-slides:\n    url: https://slidesmcp.googleapis.com/mcp/v1\n    auth: oauth\n    oauth:\n      client_id: ${GOOGLE_MCP_CLIENT_ID}\n      client_secret: ${GOOGLE_MCP_CLIENT_SECRET}\n      scope: https://www.googleapis.com/auth/drive\n      redirect_port: 12798\n      redirect_host: localhost\n    tools:\n      prompts: false\n      resources: false\n    sampling:\n      enabled: false\n', { mode: 0o600 });
+    await expect(hermesMcpLogin({ agent: 'hermes', target, services: ['slides'], env: { GOOGLE_MCP_CLIENT_ID: 'set', GOOGLE_MCP_CLIENT_SECRET: 'set' }, isTTY: true, runner })).rejects.toThrow(/OAuth layout/);
+    expect(runner).not.toHaveBeenCalled();
   });
 
   it('rejects missing env refs, non-tty, dry-run child launch and stops on first failed login', async () => {

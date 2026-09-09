@@ -10,7 +10,7 @@ Use `install`, `auth`, `exec`, `doctor`, and `setup` when you want a private che
 - `auth` imports a Desktop OAuth client only when explicitly supplied and starts human consent.
 - `exec` forwards arguments as an array to managed `gws`; it does not interpolate shell strings.
 - `doctor` is offline by default; `--live` is explicit and metadata-only.
-- `setup` deploys skills and an absolute launcher into a selected agent discovery directory.
+- `setup` deploys the five portable skills and an absolute launcher into a selected agent discovery directory.
 
 `gws` is the Google Workspace CLI distributed as `@googleworkspace/cli`, but this project is not an official Google product and does not claim upstream support by Google.
 
@@ -19,7 +19,7 @@ Use `install`, `auth`, `exec`, `doctor`, and `setup` when you want a private che
 Use `mcp setup` and `mcp login` for Hermes native remote Google MCP servers.
 
 - Target the active Hermes home explicitly.
-- `mcp setup` merges `config.yaml` entries for selected Drive, Docs, and Sheets servers.
+- `mcp setup` merges `config.yaml` entries for selected Drive, Docs, Sheets, and Slides servers.
 - Config values reference `${GOOGLE_MCP_CLIENT_ID}` and `${GOOGLE_MCP_CLIENT_SECRET}`; secret values are never written.
 - `mcp login` runs `hermes mcp login <server>` after validating selected server entries.
 - A Hermes login success is not proof that any Workspace file is accessible.
@@ -29,6 +29,7 @@ Official Google MCP endpoints are separate from managed `gws`:
 - Drive: `https://drivemcp.googleapis.com/mcp/v1`
 - Docs: `https://docsmcp.googleapis.com/mcp/v1`
 - Sheets: `https://sheetsmcp.googleapis.com/mcp/v1`
+- Slides: `https://slidesmcp.googleapis.com/mcp/v1`
 
 See [Google Workspace MCP servers](https://developers.google.com/workspace/guides/configure-mcp-servers) and [Hermes MCP documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/).
 
@@ -40,7 +41,7 @@ See [Google Workspace MCP servers](https://developers.google.com/workspace/guide
 - They do not authenticate Google.
 - They do not prove Codex, Claude, or Hermes native compatibility.
 - Translate generic manifests to the target host's documented schema.
-- Review scopes independently; managed `gws --access read` does not constrain a separate MCP authorization.
+- Review scopes independently; managed `gws --access read` does not constrain a separate MCP authorization. Slides read/write scopes are `presentations.readonly`/`presentations`; add Drive scopes separately only when the host workflow requires Drive file access.
 
 ## Capability discovery
 

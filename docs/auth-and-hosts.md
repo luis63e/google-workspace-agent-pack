@@ -27,6 +27,7 @@ Read is default. `--services` is mandatory; `all` and arbitrary scope strings ar
 | Drive | `drive.readonly` | `drive.file` |
 | Docs | `documents.readonly` | `documents` |
 | Sheets | `spreadsheets.readonly` | `spreadsheets` |
+| Slides | `presentations.readonly` | `presentations` |
 | Gmail | `gmail.readonly` | `gmail.modify` |
 | Calendar | `calendar.readonly` | `calendar.events` |
 | People | `contacts.readonly` | `contacts` |
@@ -51,4 +52,4 @@ If you deliberately provision headless credentials, place authorized-user JSON a
 
 A temporary target proves filesystem deployment only. It does not prove a running host discovered the skills or completed OAuth.
 
-Official API docs: [Drive](https://developers.google.com/drive/api), [Docs](https://developers.google.com/docs/api), and [Sheets](https://developers.google.com/sheets/api).
+Official API docs: [Drive](https://developers.google.com/drive/api), [Docs](https://developers.google.com/docs/api), [Sheets](https://developers.google.com/sheets/api), and [Slides](https://developers.google.com/workspace/slides/api).
