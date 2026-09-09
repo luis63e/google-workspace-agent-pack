@@ -58,12 +58,14 @@ try {
   const files = packInfo.files.map(file => file.path).sort();
   report.packedFiles = files;
 
-  const required = ['package.json', 'README.md', 'LICENSE', 'CONTRIBUTING.md', 'SECURITY.md', 'dist/cli.js', 'docs/backends.md', 'docs/auth-and-hosts.md', 'docs/security-limitations.md', 'docs/development-verification.md', 'skills/google-drive/SKILL.md', 'adapters/hermes/config-example.yaml'];
+  const required = ['package.json', 'README.md', 'LICENSE', 'CONTRIBUTING.md', 'SECURITY.md', 'dist/cli.js', 'docs/backends.md', 'docs/auth-and-hosts.md', 'docs/security-limitations.md', 'docs/development-verification.md', 'docs/skill-quality.md', 'skills/google-drive/SKILL.md', 'skills/google-docs/references/create-template.md', 'skills/google-sheets/references/create-template.md', 'skills/google-slides/SKILL.md', 'skills/google-slides/references/presentation-structure-and-text.md', 'skills/google-slides/references/charts-images-and-visual-verification.md', 'skills/google-slides/references/create-template.md', 'adapters/hermes/config-example.yaml'];
   for (const path of required) assert(files.includes(path), `packed file missing: ${path}`);
   const allowedPrefixes = ['package.json', 'README.md', 'LICENSE', 'CONTRIBUTING.md', 'SECURITY.md', 'dist/', 'skills/', 'adapters/', 'docs/'];
   for (const path of files) assert(allowedPrefixes.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix), `unexpected packed file: ${path}`);
   const forbiddenFragments = ['node_modules/', '.atl/', '.mcp.json', 'agent-config/', '.env', 'client_secret', 'credentials', 'token_cache', 'package-lock.json'];
   for (const path of files) assert(!forbiddenFragments.some(fragment => path.includes(fragment)), `sensitive/local file packed: ${path}`);
+  const skillRefs = files.filter(path => path.startsWith('skills/') && path.includes('/references/'));
+  assert(skillRefs.length >= 18, `expected packaged runtime and reference files for five skills, got ${skillRefs.length}`);
 
   const tarball = join(packDir, packInfo.filename);
   await writeFile(join(fixture, 'package.json'), '{"private":true,"type":"module"}\n');
@@ -76,6 +78,7 @@ try {
   const initTarget = join(temp, 'init-target');
   const init = await run('installed init dry-run', bin, ['init', '--target', initTarget, '--dry-run'], { cwd: unrelated });
   assert(init.stdout.includes('Dry run complete'), 'init dry-run did not report dry run');
+  assert(init.stdout.includes('skills/google-slides/SKILL.md'), 'init dry-run did not include Slides skill');
 
   const doctor = await run('installed doctor safe local dispatch', bin, ['doctor', '--state', join(temp, 'state'), '--json'], { cwd: unrelated, allowedExitCodes: [0, 1] });
   assert(doctor.stdout.includes('"installation"'), 'doctor did not emit JSON status');
@@ -85,6 +88,8 @@ try {
   await chmod(hermesHome, 0o700);
   const mcp = await run('installed Hermes MCP dry-run', bin, ['mcp', 'setup', '--agent', 'hermes', '--target', hermesHome, '--services', 'drive,docs,sheets', '--dry-run', '--json'], { cwd: unrelated });
   assert(mcp.stdout.includes('google-workspace-drive'), 'mcp setup dry-run did not produce planned Hermes server');
+  const slidesMcp = await run('installed Hermes MCP slides dry-run', bin, ['mcp', 'setup', '--agent', 'hermes', '--target', hermesHome, '--services', 'slides', '--dry-run', '--json'], { cwd: unrelated });
+  assert(slidesMcp.stdout.includes('google-workspace-slides'), 'mcp setup dry-run did not produce planned Slides Hermes server');
 
   console.log(JSON.stringify({ status: 'passed', temp: '<removed>', packedFiles: files.length, steps: report.steps.map(step => ({ name: step.name, code: step.code })) }, null, 2));
   await rm(temp, { recursive: true, force: true });

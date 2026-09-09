@@ -50,14 +50,14 @@ Read [docs/backends.md](docs/backends.md) for details.
 The package never creates Google Cloud projects, enables APIs, signs in, or grants consent for you.
 
 1. Create/select a Google Cloud project.
-2. Enable only the relevant APIs: Drive, Docs, Sheets, Gmail, Calendar, or People.
+2. Enable only the relevant APIs: Drive, Docs, Sheets, Slides, Gmail, Calendar, or People.
 3. Configure OAuth consent and test users/admin approval as needed.
 4. Create a **Desktop app** OAuth client for managed `gws`.
 5. Store the downloaded client JSON outside this repository with owner-only permissions.
 6. Run:
 
 ```bash
-node dist/cli.js auth --services drive,docs,sheets \
+node dist/cli.js auth --services drive,docs,sheets,slides \
   --client-secret /path/to/private/desktop-client.json
 ```
 
@@ -72,13 +72,13 @@ Use this only for an explicitly selected active Hermes home. Create a Web OAuth 
 ```bash
 node dist/cli.js mcp setup --agent hermes \
   --target "${HERMES_HOME:-$HOME/.hermes}" \
-  --services drive,docs,sheets \
+  --services drive,docs,sheets,slides \
   --profile google-workspace \
   --access read
 
 node dist/cli.js mcp login --agent hermes \
   --target "${HERMES_HOME:-$HOME/.hermes}" \
-  --services drive,docs,sheets
+  --services drive,docs,sheets,slides
 ```
 
 See [docs/hermes-mcp.md](docs/hermes-mcp.md) and the official [Hermes MCP docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/).
@@ -92,7 +92,7 @@ node dist/cli.js setup --agent hermes --target "${HERMES_HOME:-$HOME/.hermes}" -
 
 Supported setup targets are Hermes, Codex, and Claude Code discovery directories. Setup deploys skills and a private launcher; it does not prove host discovery, authenticate Google, or run live Workspace calls.
 
-The skill contracts preserve bounded authorization, untrusted-content boundaries, Sheets numeric `sheetId`, locale/time-zone checks, formula/evaluated reads, and explicit write scope.
+Setup deploys five portable v1.3.0 Markdown skills: Drive, Sheets, Docs, Slides, and Workspace Safety. Cores preserve safety gates and link only matched tasks to local references or sibling handoffs; there is no production route loader/router. Docs/Sheets/Slides include create/template recipes. See [docs/skill-quality.md](docs/skill-quality.md) for the Markdown-only progressive disclosure contract.
 
 ## Verify safely
 
@@ -117,4 +117,4 @@ Manual checksum install/setup verification lives in `.github/workflows/integrati
 - [Development and verification](docs/development-verification.md) — local commands and historical verification reports.
 - [Native Hermes MCP](docs/hermes-mcp.md) — Hermes setup/login details.
 
-Official references: [Google Drive API](https://developers.google.com/drive/api), [Google Docs API](https://developers.google.com/docs/api), [Google Sheets API](https://developers.google.com/sheets/api), [Google Workspace MCP servers](https://developers.google.com/workspace/guides/configure-mcp-servers), and [Hermes MCP docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/).
+Official references: [Google Drive API](https://developers.google.com/drive/api), [Google Docs API](https://developers.google.com/docs/api), [Google Sheets API](https://developers.google.com/sheets/api), [Google Slides API](https://developers.google.com/workspace/slides/api), [Google Workspace MCP servers](https://developers.google.com/workspace/guides/configure-mcp-servers), [Google Slides MCP setup](https://developers.google.com/workspace/slides/api/guides/configure-mcp-server), and [Hermes MCP docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/).

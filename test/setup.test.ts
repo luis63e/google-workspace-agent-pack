@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
 import { parseArgs, run } from '../src/cli.js';
-import { setup, discoveryRoot } from '../src/setup.js';
+import { setup, discoveryRoot, deploymentFiles } from '../src/setup.js';
 import { vi } from 'vitest';
 import { mkdtemp, readdir, readFile, writeFile, mkdir, symlink, chmod, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -43,6 +43,29 @@ it('rolls back only newly deployed skills on write failure and preserves unrelat
   expect(writes).toBe(5);
   expect(await readdir(root)).toEqual(['personal']);
   expect(await readFile(join(root, 'personal', 'SKILL.md'), 'utf8')).toBe('USER');
+});
+
+it('refuses synthetic previous four-skill deployments before installation without overwriting', async () => {
+  const target = await mkdtemp(join(tmpdir(), 'setup-old4-'));
+  const root = discoveryRoot('hermes', target);
+  const oldSkillNames = ['google-drive', 'google-sheets', 'google-docs', 'google-workspace-safety'];
+  const oldFiles = oldSkillNames.flatMap(name => [
+    `${name}/SKILL.md`,
+    `${name}/references/runtime.md`,
+    `${name}/references/old-first.md`,
+    `${name}/references/old-second.md`,
+    `${name}/scripts/gws`
+  ]);
+  for (const file of oldFiles) {
+    await mkdir(join(root, file.split('/').slice(0, -1).join('/')), { recursive: true, mode: 0o700 });
+    await writeFile(join(root, file), `OLD FOUR-SKILL DEPLOYMENT: ${file}`);
+  }
+  expect(deploymentFiles(root, join(target, 'state')).filter(file => file.path.endsWith('/SKILL.md')).map(file => file.path.split('/')[0])).toContain('google-slides');
+  const install = vi.fn(async () => ({}));
+  await expect(setup({ agent: 'hermes', target, state: join(target, 'state') }, { install })).rejects.toThrow(/conflict/i);
+  expect(install).not.toHaveBeenCalled();
+  for (const file of oldFiles) expect(await readFile(join(root, file), 'utf8')).toBe(`OLD FOUR-SKILL DEPLOYMENT: ${file}`);
+  await expect(readFile(join(root, 'google-slides', 'SKILL.md'), 'utf8')).rejects.toThrow();
 });
 
 it('rejects unsupported agents, force, incomplete existing skills and symlink targets before installation', async () => {

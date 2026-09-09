@@ -1,6 +1,6 @@
 ---
-name: google-sheets
-description: "Trigger: Google Sheets, spreadsheet, cells, ranges, formulas, create/template. Preserve structure."
+name: google-slides
+description: "Trigger: Google Slides, decks, slides, charts, thumbnails, create/template. Verify structure and visual limits."
 license: MIT
 metadata:
   author: google-workspace-agent-pack
@@ -19,7 +19,7 @@ Markdown links are authority. Planning: core only. Setup/install is not live-ver
 - Secrets: no credentials; config is not live access.
 - Capability: inspect schemas; state limits; do not invent support.
 - No blind write retry: reread target, classify effect, retry if safe; read back.
-- Resolve spreadsheetId, tab title, numeric sheetId, locale/timezone; preserve FORMULA, UNFORMATTED_VALUE, USER_ENTERED (e.g. =SUM(B2:B10)), validation, protections, filters, hidden rows/columns, chips, notes, formats unless targeted.
+- Resolve presentationId, slide/element/layout/master/theme/notes/link/size/transform. Without render/thumbnail/image, visual verification remains pending.
 
 ## Decision Gates
 Stop unresolved choices.
@@ -31,10 +31,10 @@ Use matched row.
 | Task | Load when needed |
 | --- | --- |
 | Plan from supplied text | Core only. |
-| Read ranges/formulas/values | [ranges](references/ranges-values-and-formulas.md) |
-| Edit values/formats/validation | [ranges](references/ranges-values-and-formulas.md) + [batch](references/batch-updates-and-preservation.md) |
-| Errors/retries | [batch](references/batch-updates-and-preservation.md) + [safety](../google-workspace-safety/SKILL.md) |
-| Create/template | [create](references/create-template.md) + Drive: [google-drive](../google-drive/SKILL.md) |
+| Read structure/notes | [structure](references/presentation-structure-and-text.md) |
+| Text/shape/style edits | [structure](references/presentation-structure-and-text.md) + retry: [safety](../google-workspace-safety/SKILL.md) |
+| Media/visual checks | [media](references/charts-images-and-visual-verification.md) |
+| Create/template | [create](references/create-template.md) + Drive: [google-drive](../google-drive/SKILL.md); charts: [google-sheets](../google-sheets/SKILL.md) |
 
 ## Output Contract
 IDs, auth, scope, readback, limits.

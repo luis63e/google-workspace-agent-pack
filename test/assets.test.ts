@@ -26,6 +26,8 @@ it('labels generated service skills and generic adapter manifests as unverified 
   expect(hermesYaml).toContain('${GOOGLE_MCP_CLIENT_ID}');
   expect(hermesYaml).toContain('tools:\n      prompts: false\n      resources: false');
   expect(hermesYaml).toContain('sampling:\n      enabled: false');
+  expect(hermesYaml).toContain('https://slidesmcp.googleapis.com/mcp/v1');
+  expect(hermesYaml).toContain('https://www.googleapis.com/auth/presentations.readonly');
   expect(hermesYaml).not.toContain('client_secret: SECRET');
   expect(hermesYaml).not.toContain('\n    prompts: false');
   expect(hermesYaml).not.toContain('\n    sampling: false');

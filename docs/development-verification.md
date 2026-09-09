@@ -29,14 +29,14 @@ It does not install `gws`, perform OAuth, call live Google Workspace APIs, or re
 
 ## Skill sync
 
-`src/skills.ts` is canonical. Tracked repository copies under `skills/` are the only generated files required by `skills:sync`, `skills:check`, `prepack`, and CI.
+`src/skills.ts` and `src/skill-references.ts` generate the Markdown corpus. The generated Markdown is the only task-loading authority; there is no production route metadata export or runtime router. Tracked repository copies under `skills/` are the only generated files required by `skills:sync`, `skills:check`, `prepack`, and CI.
 
 ```bash
 npm run skills:sync
 npm run skills:check
 ```
 
-The sync script compares previous generated hashes and refuses to overwrite user edits in tracked `skills/`. It does not read, require, or modify ignored local `agent-config/` copies or user global skill stores. Refresh external live-agent registries only when metadata or paths intentionally change.
+The sync script compares previous generated hashes and refuses to overwrite user edits in tracked `skills/`. It does not implement a runtime loader/router, benchmark host/model performance, or read/modify ignored local `agent-config/` copies or user global skill stores. Existing deployed skills with local edits remain conflicts for manual reconciliation; there is no force upgrade. Refresh external live-agent registries only when metadata or paths intentionally change.
 
 ## Manual integration workflow
 
